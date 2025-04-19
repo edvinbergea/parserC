@@ -19,3 +19,4 @@ steg5:	driver.c parser.c keytoktab.c lexer.c symtab.c optab.c
 clean:	
 	rm -rf parser
 	rm -rf *.out
+	rm -rf *.err

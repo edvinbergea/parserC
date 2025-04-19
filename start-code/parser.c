@@ -74,12 +74,96 @@ static void match(int t)
 /**********************************************************************/
 /* The grammar functions                                              */
 /**********************************************************************/
-static void program_header()
+static void program_header_grmr()
 {
     in("program_header");
     match(program); match(id); match('('); match(input);
     match(','); match(output); match(')'); match(';');
     out("program_header");
+}
+static void program_grmr()
+{
+    in("program");
+    program_header_grmr(); var_part_grmr(); stat_part_grmr();
+    out("program");
+}
+static void var_part_grmr()
+{
+    in("var_part");
+    //todo
+    out("var_part");
+}
+static void var_dec_part_grmr()
+{
+    in("var_dec_part");
+    //todo
+    out("var_dec_part");
+}
+static void var_dec_grmr()
+{
+    in("var_dec");
+    //todo
+    out("var_dec");
+}
+static void id_list_grmr()
+{
+    in("id_list");
+    //todo
+    out("id_list");
+}
+static void type_grmr()
+{
+    in("type");
+    //todo
+    out("type");
+}
+static void stat_part_grmr()
+{
+    in("stat_part");
+    //todo
+    out("stat_part");
+}
+static void stat_list_grmr()
+{
+    in("stat_list");
+    //todo
+    out("stat_list");
+}
+static void stat_grmr()
+{
+    in("stat");
+    //todo
+    out("stat");
+}
+static void assign_stat_grmr()
+{
+    in("assign_stat");
+    //todo
+    out("assign_stat");
+}
+static void expr_grmr()
+{
+    in("expr");
+    //todo
+    out("expr");
+}
+static void term_grmr()
+{
+    in("term");
+    //todo
+    out("term");
+}
+static void factor_grmr()
+{
+    in("factor");
+    //todo
+    out("factor");
+}
+static void opperand_grmr()
+{
+    in("opperand");
+    //todo
+    out("opperand");
 }
 
 /**********************************************************************/
@@ -90,7 +174,7 @@ int parser()
 {
     in("parser");
     lookahead = pget_token();       // get the first token
-    program_header();               // call the first grammar rule
+    program_header_grmr();          // call the first grammar rule
     out("parser");
     return is_parse_ok;             // status indicator
 }
