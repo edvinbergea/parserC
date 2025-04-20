@@ -29,11 +29,14 @@ static int  is_parse_ok=1;
 /**********************************************************************/
 /* define tokens + keywords NB: remove this when keytoktab.h is added */
 /**********************************************************************/
-enum tvalues { program = 257, id, input, output };
+enum tvalues {  program_tok = 257, id_tok, input_tok,
+                output_tok, var_tok, int_tok, real_tok, 
+                bool_tok, begin_tok, end_tok, num_tok };
+
 /**********************************************************************/
 /* Simulate the token stream for a given program                      */
 /**********************************************************************/
-static int tokens[] = {program, id, '(', input, ',', output, ')', ';',
+static int tokens[] = {program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
                '$' };
 
 /**********************************************************************/
@@ -70,99 +73,136 @@ static void match(int t)
               t, lookahead);
     }
 }
+static void check_stream(){
+    if(lookahead != '$'){
+        is_parse_ok = 0;
+    }
+}
 
 /**********************************************************************/
 /* The grammar functions                                              */
 /**********************************************************************/
-static void program_header_grmr()
+static void prog_header_grmr()
 {
     in("program_header");
-    match(program); match(id); match('('); match(input);
-    match(','); match(output); match(')'); match(';');
+    match(program_tok); match(id_tok); match('('); match(input_tok);
+    match(','); match(output_tok); match(')'); match(';');
     out("program_header");
 }
-static void program_grmr()
+static void prog_grmr()
 {
     in("program");
-    program_header_grmr(); var_part_grmr(); stat_part_grmr();
+    prog_header_grmr(); var_part_grmr(); stat_part_grmr();
     out("program");
 }
 static void var_part_grmr()
 {
     in("var_part");
-    //todo
+    match(var_tok); var_dec_list_grmr();
     out("var_part");
 }
-static void var_dec_part_grmr()
+static void var_dec_list_grmr()
 {
     in("var_dec_part");
-    //todo
+    do{
+        var_dec_grmr();
+    }while(lookahead == id_tok)
     out("var_dec_part");
 }
 static void var_dec_grmr()
 {
     in("var_dec");
-    //todo
+    id_list_grmr(); match(':'); type_grmr(); match(';');
     out("var_dec");
 }
 static void id_list_grmr()
 {
     in("id_list");
-    //todo
+    match(id_tok);
+    while(lookahead == ','){
+        match(',');
+        match(id_tok);
+    }
     out("id_list");
 }
 static void type_grmr()
 {
     in("type");
-    //todo
+    if(lookahead == int_tok)
+        match(int_tok);
+    else if(lookahead == real_tok)
+        match(real_tok);
+    else if(lookahead == bool_tok)
+        match(bool_tok);
     out("type");
 }
 static void stat_part_grmr()
 {
     in("stat_part");
-    //todo
+    match(begin_tok); stat_list_grmr(); match(end_tok);
     out("stat_part");
 }
 static void stat_list_grmr()
 {
     in("stat_list");
-    //todo
+    stat_grmr(); 
+    while(lookahead == ';'){
+        match(';');
+        stat_grmr(); 
+    }
     out("stat_list");
 }
 static void stat_grmr()
 {
     in("stat");
-    //todo
+    assign_stat_grmr();
     out("stat");
 }
 static void assign_stat_grmr()
 {
     in("assign_stat");
-    //todo
+    match(id_tok); match(':'); match('='); expr_grmr();
     out("assign_stat");
 }
 static void expr_grmr()
 {
     in("expr");
-    //todo
+    term_grmr();
+    while(lookahead == '+'){
+        match('+');
+        term_grmr();
+    }
     out("expr");
 }
 static void term_grmr()
 {
     in("term");
-    //todo
+    factor_grmr();
+    while(lookahead == '*'){
+        match('*');
+        factor_grmr();
+    }
     out("term");
 }
 static void factor_grmr()
 {
     in("factor");
-    //todo
+    if(lookahead == '('){
+        match('(');
+        expr_grmr();
+        match(')');
+    }
+    else if(lookahead == id_tok || lookahead == num_tok)
+        operand_grmr();
     out("factor");
 }
-static void opperand_grmr()
+static void operand_grmr()
 {
     in("opperand");
-    //todo
+    if(lookahead == id_tok)
+        match(id_tok);
+    if(lookahead == num_tok)
+        match(num_tok);
     out("opperand");
 }
 
@@ -174,7 +214,8 @@ int parser()
 {
     in("parser");
     lookahead = pget_token();       // get the first token
-    program_header_grmr();          // call the first grammar rule
+    prog_grmr();                    // call the first grammar rule
+    check_stream();                 // check if stream is empty
     out("parser");
     return is_parse_ok;             // status indicator
 }
