@@ -32,9 +32,9 @@ static tab tokentab[ ] = {
     {"id", 	            id},
     {"number",      number},
     {":=", 	        assign},
-    {"undef", 	     undef},
     {"predef",      predef},
     {"tempty",      tempty},
+    {"undef", 	     undef},
     {"error",        error},
     {"type",           typ},
     {"$",              '$'},
@@ -51,7 +51,6 @@ static tab tokentab[ ] = {
     {"=",              '='},
     {"TERROR", 	    nfound}
 };
-
 
 static tab keywordtab[ ] = {
 	{"program", 	program},
@@ -72,17 +71,57 @@ static tab keywordtab[ ] = {
 /**********************************************************************/
 /* Display the tables                                                 */
 /**********************************************************************/
+
 void p_toktab()
-{
-    printf("\n *** TO BE DONE");
+{ 
+    puts("");
+    puts("________________________________________________________ ");
+    puts(" THE PROGRAM KEYWORDS ");
+    puts("________________________________________________________ ");
+    for(int i = 0; keywordtab[i].token != nfound; i++){
+        printf("%11s%5d \n", keywordtab[i].text, keywordtab[i].token);
+    }
+    puts("________________________________________________________ ");
+    puts(" THE PROGRAM TOKENS ");
+    puts("________________________________________________________ ");
+    for(int i = 0; tokentab[i].token != nfound; i++){
+        printf("%11s%5d \n", tokentab[i].text, tokentab[i].token);
+    }
+    puts("________________________________________________________ ");
 }
 
 /**********************************************************************/
 /* lex2tok - convert a lexeme to a token                              */
 /**********************************************************************/
+static toktyp search_str(tab* arr, char* str){
+    for(int i = 0; arr[i].token != nfound; i++){
+        if(strcmp(arr[i].text, str) == 0)
+            return arr[i].token;
+    }
+    return nfound;
+}
+static char* search_tok(tab* arr, toktyp tok){
+    for(int i = 0; arr[i].token != nfound; i++){
+        if(arr[i].token == tok)
+            return arr[i].text;
+    }
+    return NULL;
+}
+
 toktyp lex2tok(char * fplex)
 {
-    printf("\n *** TO BE DONE");  return 0;
+    toktyp t;
+
+    /* 1) reserved words? */
+    t = search_str(keywordtab, fplex);
+    if (t != nfound) return t;
+
+    /* 2) all other fixed tokens (operators, punctuation, bookkeeping) */
+    t = search_str(tokentab, fplex);
+    if (t != nfound) return t;
+
+    /* 3) otherwise it’s an identifier */
+    return id;    /* 258 */
 }
 
 /**********************************************************************/
@@ -90,7 +129,8 @@ toktyp lex2tok(char * fplex)
 /**********************************************************************/
 toktyp key2tok(char * fplex)
 {
-    printf("\n *** TO BE DONE");  return 0;
+    toktyp res = search_str(keywordtab, fplex);
+    return res != nfound ? res : id;
 }
 
 /**********************************************************************/
@@ -98,7 +138,12 @@ toktyp key2tok(char * fplex)
 /**********************************************************************/
 char * tok2lex(toktyp ftok)
 {
-    printf("\n *** TO BE DONE");  return 0;
+    char* res;
+    if((res = search_tok(keywordtab, ftok)) != NULL || (res = search_tok(tokentab, ftok)) != NULL)
+        return res;
+    else{
+        return NULL;
+    }
 }
 
 /**********************************************************************/
