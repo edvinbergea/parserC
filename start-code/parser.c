@@ -20,7 +20,7 @@
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
 /**********************************************************************/
-#define DEBUG 1
+#define DEBUG 0
 static int  lookahead=0;
 static int  is_parse_ok=1;
 
@@ -36,8 +36,96 @@ enum tvalues {  program_tok = 257, id_tok, input_tok,
 /**********************************************************************/
 /* Simulate the token stream for a given program                      */
 /**********************************************************************/
-static int tokens[] = {program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
-               '$' };
+
+/* testok1 */
+static int tokens1[] = {
+    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
+    var_tok,
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+    begin_tok,
+      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
+    end_tok, '.', 
+    '$'
+};
+
+/* testok2 */
+static int tokens2[] = {
+    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
+    var_tok,
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+    begin_tok,
+      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok, ';',
+      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok, ';',
+      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
+    end_tok, '.', 
+    '$'
+};
+
+/* testok3 */
+static int tokens3[] = {
+    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
+    var_tok,
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+    begin_tok,
+      id_tok, ':', '=', num_tok, '+', num_tok, '*', num_tok, ';',
+      id_tok, ':', '=', num_tok, '+', num_tok, '*', num_tok, ';',
+      id_tok, ':', '=', num_tok, '+', num_tok, '*', num_tok,
+    end_tok, '.', 
+    '$'
+};
+
+/* testok4 */
+static int tokens4[] = {
+    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
+    var_tok,
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+    begin_tok,
+      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
+    end_tok, '.', 
+    '$'
+};
+
+/* testok5 */
+static int tokens5[] = {
+    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
+    var_tok,
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+      id_tok, ':', int_tok, ';',
+      id_tok, ':', int_tok, ';',
+      id_tok, ':', int_tok, ';',
+    begin_tok,
+      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok, ';',
+      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
+    end_tok, '.', 
+    '$'
+};
+
+/* testok6 */
+static int tokens6[] = {
+    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
+    var_tok,
+      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
+    begin_tok,
+      id_tok, ':', '=', '(', id_tok, '+', id_tok, ')', '*', num_tok,
+    end_tok, '.', 
+    '$'
+};
+
+/* testok7 */
+static int tokens7[] = {
+    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
+    var_tok,
+      id_tok, ':', int_tok, ';',
+      id_tok, ':', int_tok, ';',
+      id_tok, ':', int_tok, ';',
+    begin_tok,
+      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
+    end_tok, '.', 
+    '$'
+};
 
 /**********************************************************************/
 /*  Simulate the lexer -- get the next token from the buffer          */
@@ -45,7 +133,7 @@ static int tokens[] = {program_tok, id_tok, '(', input_tok, ',', output_tok, ')'
 static int pget_token()
 {
     static int i=0;
-    if (tokens[i] != '$') return tokens[i++]; else return '$';
+    if (tokens7[i] != '$') return tokens7[i++]; else return '$';
 }
 
 /**********************************************************************/
@@ -82,18 +170,34 @@ static void check_stream(){
 /**********************************************************************/
 /* The grammar functions                                              */
 /**********************************************************************/
+static void prog_grmr(void);
+static void prog_header_grmr(void);
+static void var_part_grmr(void);
+static void var_dec_list_grmr(void);
+static void var_dec_grmr(void);
+static void id_list_grmr(void);
+static void type_grmr(void);
+static void stat_part_grmr(void);
+static void stat_list_grmr(void);
+static void stat_grmr(void);
+static void assign_stat_grmr(void);
+static void expr_grmr(void);
+static void term_grmr(void);
+static void factor_grmr(void);
+static void operand_grmr(void);
+
+static void prog_grmr()
+{
+    in("program");
+    prog_header_grmr(); var_part_grmr(); stat_part_grmr();
+    out("program");
+}
 static void prog_header_grmr()
 {
     in("program_header");
     match(program_tok); match(id_tok); match('('); match(input_tok);
     match(','); match(output_tok); match(')'); match(';');
     out("program_header");
-}
-static void prog_grmr()
-{
-    in("program");
-    prog_header_grmr(); var_part_grmr(); stat_part_grmr();
-    out("program");
 }
 static void var_part_grmr()
 {
@@ -106,7 +210,7 @@ static void var_dec_list_grmr()
     in("var_dec_part");
     do{
         var_dec_grmr();
-    }while(lookahead == id_tok)
+    }while(lookahead == id_tok);
     out("var_dec_part");
 }
 static void var_dec_grmr()
@@ -139,7 +243,7 @@ static void type_grmr()
 static void stat_part_grmr()
 {
     in("stat_part");
-    match(begin_tok); stat_list_grmr(); match(end_tok);
+    match(begin_tok); stat_list_grmr(); match(end_tok); match('.');
     out("stat_part");
 }
 static void stat_list_grmr()
