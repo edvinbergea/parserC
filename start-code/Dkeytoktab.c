@@ -132,10 +132,6 @@ int main()
            lex2tok("error"), tok2lex(lex2tok("error")));
     printf("\n lex2tok(\"type\")    = %4d;    tok2lex(lex2tok(\"type\"))   = %10s ",
            lex2tok("type"), tok2lex(lex2tok("type")));
-    printf("\n lex2tok(\"9abc\")    = %4d;    tok2lex(lex2tok(\"9abc\"))   = %10s ",
-           lex2tok("9abc"), tok2lex(lex2tok("9abc")));
-    printf("\n lex2tok(\"999\")    = %4d;    tok2lex(lex2tok(\"999\"))   = %10s ",
-           lex2tok("999"), tok2lex(lex2tok("999")));
     printf("\n\n");
 
     /**********************************************************************/

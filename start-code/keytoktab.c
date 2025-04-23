@@ -112,16 +112,16 @@ toktyp lex2tok(char * fplex)
 {
     toktyp t;
 
-    /* 1) reserved words? */
     t = search_str(keywordtab, fplex);
     if (t != nfound) return t;
 
-    /* 2) all other fixed tokens (operators, punctuation, bookkeeping) */
     t = search_str(tokentab, fplex);
     if (t != nfound) return t;
 
-    /* 3) otherwise it’s an identifier */
-    return id;    /* 258 */
+    if(isdigit(fplex[0]))
+        return number;
+
+    return id;
 }
 
 /**********************************************************************/

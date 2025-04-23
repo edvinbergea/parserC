@@ -23,6 +23,7 @@ static char buffer[BUFSIZE];
 static char lexbuf[LEXSIZE];
 static int  pbuf  = 0;               /* current index program buffer  */
 static int  plex  = 0;               /* current index lexeme  buffer  */
+static int _init = 0;
 
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
@@ -79,9 +80,13 @@ static void get_char()
 /**********************************************************************/
 int get_token()
 {
+    if(!_init){_init = 1; get_prog();}
     plex       = 0;
     lexbuf[0]  = '\0';
 
+    // skip white space
+    while (isspace(buffer[pbuf])) 
+        pbuf++;
     if (buffer[pbuf] == '\0') {
         return '$';
     }

@@ -20,20 +20,10 @@
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
 /**********************************************************************/
-#define DEBUG 0
+#define DEBUG 1
 static int  lookahead=0;
 static int  is_parse_ok=1;
 
-/**********************************************************************/
-/*  Simulate the lexer -- get the next token from the buffer          */
-/**********************************************************************/
-/*
-static int pget_token()
-{
-    static int i=0;
-    if (tokens7[i] != '$') return tokens7[i++]; else return '$';
-}
-*/
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
 /**********************************************************************/
@@ -50,13 +40,13 @@ static void out(char* s)
 /**********************************************************************/
 static void match(int t)
 {
-    if(DEBUG) printf("\n --------In match expected: %4d, found: %4d",
-                    t, lookahead);
+    if(DEBUG) printf("\n --------In match\t expected: %-7s  found: %s",
+                    tok2lex(t), tok2lex(lookahead));
     if (lookahead == t) lookahead = get_token();
     else {
     is_parse_ok=0;
-    printf("\n *** Unexpected Token: expected: %4d found: %4d (in match)",
-              t, lookahead);
+    printf("\n *** Unexpected Token:\t expected: %-7s  found: %s (in match)",
+              tok2lex(t), tok2lex(lookahead));
     }
 }
 static void check_stream(){
@@ -215,8 +205,8 @@ static void operand_grmr()
 int parser()
 {
     in("parser");
-    lookahead = pget_token();       // get the first token
-    prog_grmr();                    // call the first grammar rule
+    lookahead = get_token();        // get the first token
+    prog_grmr();                    // call the first grammar rule               
     check_stream();                 // check if stream is empty
     out("parser");
     return is_parse_ok;             // status indicator
