@@ -12,8 +12,8 @@
 /**********************************************************************/
 /* Other OBJECT's METHODS (IMPORTED)                                  */
 /**********************************************************************/
-/* #include "keytoktab.h"   */       /* when the keytoktab is added   */
-/* #include "lexer.h"       */       /* when the lexer     is added   */
+#include "keytoktab.h"
+#include "lexer.h"
 /* #include "symtab.h"      */       /* when the symtab    is added   */
 /* #include "optab.h"       */       /* when the optab     is added   */
 
@@ -25,117 +25,15 @@ static int  lookahead=0;
 static int  is_parse_ok=1;
 
 /**********************************************************************/
-/* RAPID PROTOTYPING - simulate the token stream & lexer (get_token)  */
-/**********************************************************************/
-/* define tokens + keywords NB: remove this when keytoktab.h is added */
-/**********************************************************************/
-enum tvalues {  program_tok = 257, id_tok, input_tok,
-                output_tok, var_tok, int_tok, real_tok, 
-                bool_tok, begin_tok, end_tok, num_tok };
-
-/**********************************************************************/
-/* Simulate the token stream for a given program                      */
-/**********************************************************************/
-
-/* testok1 */
-static int tokens1[] = {
-    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
-    var_tok,
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-    begin_tok,
-      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
-    end_tok, '.', 
-    '$'
-};
-
-/* testok2 */
-static int tokens2[] = {
-    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
-    var_tok,
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-    begin_tok,
-      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok, ';',
-      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok, ';',
-      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
-    end_tok, '.', 
-    '$'
-};
-
-/* testok3 */
-static int tokens3[] = {
-    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
-    var_tok,
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-    begin_tok,
-      id_tok, ':', '=', num_tok, '+', num_tok, '*', num_tok, ';',
-      id_tok, ':', '=', num_tok, '+', num_tok, '*', num_tok, ';',
-      id_tok, ':', '=', num_tok, '+', num_tok, '*', num_tok,
-    end_tok, '.', 
-    '$'
-};
-
-/* testok4 */
-static int tokens4[] = {
-    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
-    var_tok,
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-    begin_tok,
-      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
-    end_tok, '.', 
-    '$'
-};
-
-/* testok5 */
-static int tokens5[] = {
-    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
-    var_tok,
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-      id_tok, ':', int_tok, ';',
-      id_tok, ':', int_tok, ';',
-      id_tok, ':', int_tok, ';',
-    begin_tok,
-      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok, ';',
-      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
-    end_tok, '.', 
-    '$'
-};
-
-/* testok6 */
-static int tokens6[] = {
-    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
-    var_tok,
-      id_tok, ',', id_tok, ',', id_tok, ':', int_tok, ';',
-    begin_tok,
-      id_tok, ':', '=', '(', id_tok, '+', id_tok, ')', '*', num_tok,
-    end_tok, '.', 
-    '$'
-};
-
-/* testok7 */
-static int tokens7[] = {
-    program_tok, id_tok, '(', input_tok, ',', output_tok, ')', ';',
-    var_tok,
-      id_tok, ':', int_tok, ';',
-      id_tok, ':', int_tok, ';',
-      id_tok, ':', int_tok, ';',
-    begin_tok,
-      id_tok, ':', '=', id_tok, '+', id_tok, '*', num_tok,
-    end_tok, '.', 
-    '$'
-};
-
-/**********************************************************************/
 /*  Simulate the lexer -- get the next token from the buffer          */
 /**********************************************************************/
+/*
 static int pget_token()
 {
     static int i=0;
     if (tokens7[i] != '$') return tokens7[i++]; else return '$';
 }
-
+*/
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
 /**********************************************************************/
@@ -154,7 +52,7 @@ static void match(int t)
 {
     if(DEBUG) printf("\n --------In match expected: %4d, found: %4d",
                     t, lookahead);
-    if (lookahead == t) lookahead = pget_token();
+    if (lookahead == t) lookahead = get_token();
     else {
     is_parse_ok=0;
     printf("\n *** Unexpected Token: expected: %4d found: %4d (in match)",
@@ -195,14 +93,14 @@ static void prog_grmr()
 static void prog_header_grmr()
 {
     in("program_header");
-    match(program_tok); match(id_tok); match('('); match(input_tok);
-    match(','); match(output_tok); match(')'); match(';');
+    match(program); match(id); match('('); match(input);
+    match(','); match(output); match(')'); match(';');
     out("program_header");
 }
 static void var_part_grmr()
 {
     in("var_part");
-    match(var_tok); var_dec_list_grmr();
+    match(var); var_dec_list_grmr();
     out("var_part");
 }
 static void var_dec_list_grmr()
@@ -210,7 +108,7 @@ static void var_dec_list_grmr()
     in("var_dec_part");
     do{
         var_dec_grmr();
-    }while(lookahead == id_tok);
+    }while(lookahead == id);
     out("var_dec_part");
 }
 static void var_dec_grmr()
@@ -222,28 +120,28 @@ static void var_dec_grmr()
 static void id_list_grmr()
 {
     in("id_list");
-    match(id_tok);
+    match(id);
     while(lookahead == ','){
         match(',');
-        match(id_tok);
+        match(id);
     }
     out("id_list");
 }
 static void type_grmr()
 {
     in("type");
-    if(lookahead == int_tok)
-        match(int_tok);
-    else if(lookahead == real_tok)
-        match(real_tok);
-    else if(lookahead == bool_tok)
-        match(bool_tok);
+    if(lookahead == integer)
+        match(integer);
+    else if(lookahead == real)
+        match(real);
+    else if(lookahead == boolean)
+        match(boolean);
     out("type");
 }
 static void stat_part_grmr()
 {
     in("stat_part");
-    match(begin_tok); stat_list_grmr(); match(end_tok); match('.');
+    match(begin); stat_list_grmr(); match(end); match('.');
     out("stat_part");
 }
 static void stat_list_grmr()
@@ -265,7 +163,7 @@ static void stat_grmr()
 static void assign_stat_grmr()
 {
     in("assign_stat");
-    match(id_tok); match(':'); match('='); expr_grmr();
+    match(id); match(assign); expr_grmr();
     out("assign_stat");
 }
 static void expr_grmr()
@@ -296,17 +194,17 @@ static void factor_grmr()
         expr_grmr();
         match(')');
     }
-    else if(lookahead == id_tok || lookahead == num_tok)
+    else if(lookahead == id || lookahead == number)
         operand_grmr();
     out("factor");
 }
 static void operand_grmr()
 {
     in("opperand");
-    if(lookahead == id_tok)
-        match(id_tok);
-    if(lookahead == num_tok)
-        match(num_tok);
+    if(lookahead == id)
+        match(id);
+    if(lookahead == number)
+        match(number);
     out("opperand");
 }
 

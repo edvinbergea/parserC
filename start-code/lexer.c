@@ -36,7 +36,11 @@ static int  plex  = 0;               /* current index lexeme  buffer  */
 
 static void get_prog()
 {
-    printf("\n *** TO BE DONE");
+    int c, i = 0;
+    while ((c = getchar()) != EOF && i < BUFSIZE-1) {
+        buffer[i++] = (char)c;
+    }
+    buffer[i] = '\0';
 }
 
 /**********************************************************************/
@@ -45,7 +49,7 @@ static void get_prog()
 
 static void pbuffer()
 {
-    printf("\n *** TO BE DONE");
+    puts(buffer);
 }
 
 /**********************************************************************/
@@ -54,7 +58,13 @@ static void pbuffer()
 
 static void get_char()
 {
-    printf("\n *** TO BE DONE");
+    char c = buffer[pbuf];
+    if (c == '\0') return;
+    if (plex < LEXSIZE - 1) {
+        lexbuf[plex++] = c;
+        lexbuf[plex]   = '\0';
+    } else {/* To long */}
+    pbuf++;
 }
 
 /**********************************************************************/
@@ -69,7 +79,35 @@ static void get_char()
 /**********************************************************************/
 int get_token()
 {
-    printf("\n *** TO BE DONE"); return 0;
+    plex       = 0;
+    lexbuf[0]  = '\0';
+
+    if (buffer[pbuf] == '\0') {
+        return '$';
+    }
+    // skip white space
+    while (isspace(buffer[pbuf])) 
+        pbuf++;
+    // match id and keywords
+    if (isalpha(buffer[pbuf])) {
+        do {
+            get_char();
+        } while (isalnum(buffer[pbuf]));
+    }
+    //match numbers
+    else if (isdigit(buffer[pbuf])) {
+        do {
+            get_char();
+        } while (isdigit(buffer[pbuf]));
+    }
+    //match other
+    else {
+        get_char();
+        if (lexbuf[0] == ':' && buffer[pbuf] == '=') {
+            get_char();
+        }
+    }
+    return lex2tok(lexbuf);
 }
 
 /**********************************************************************/
@@ -77,7 +115,7 @@ int get_token()
 /**********************************************************************/
 char * get_lexeme()
 {
-    printf("\n *** TO BE DONE"); return "$";
+    return lexbuf;
 }
 
 /**********************************************************************/
