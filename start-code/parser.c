@@ -14,15 +14,16 @@
 /**********************************************************************/
 #include "keytoktab.h"
 #include "lexer.h"
-/* #include "symtab.h"      */       /* when the symtab    is added   */
-/* #include "optab.h"       */       /* when the optab     is added   */
+#include "symtab.h"
+//#include "optab.h"
 
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
 /**********************************************************************/
-#define DEBUG 1
+#define DEBUG 0
 static int  lookahead=0;
 static int  is_parse_ok=1;
+static int  match_ok=1;
 
 /**********************************************************************/
 /*  PRIVATE METHODS for this OBJECT  (using "static" in C)            */
@@ -40,13 +41,15 @@ static void out(char* s)
 /**********************************************************************/
 static void match(int t)
 {
+    match_ok = 1;
     if(DEBUG) printf("\n --------In match\t expected: %-7s  found: %s",
                     tok2lex(t), tok2lex(lookahead));
     if (lookahead == t) lookahead = get_token();
     else {
-    is_parse_ok=0;
-    printf("\n *** Unexpected Token:\t expected: %-7s  found: %s (in match)",
-              tok2lex(t), tok2lex(lookahead));
+        match_ok = 0;
+        is_parse_ok=0;
+        printf("\n *** Unexpected Token:\t expected: %-7s  found: %s (in match)",
+                tok2lex(t), tok2lex(lookahead));
     }
 }
 static void check_stream(){
@@ -83,7 +86,11 @@ static void prog_grmr()
 static void prog_header_grmr()
 {
     in("program_header");
-    match(program); match(id); match('('); match(input);
+    match(program);
+    char *pname = strdup(get_lexeme());
+    match(id); 
+    if(match_ok){addp_name(pname);}
+    match('('); match(input);
     match(','); match(output); match(')'); match(';');
     out("program_header");
 }
@@ -110,22 +117,28 @@ static void var_dec_grmr()
 static void id_list_grmr()
 {
     in("id_list");
+    char *vname = strdup(get_lexeme());
     match(id);
+    if(match_ok){addv_name(vname);}
     while(lookahead == ','){
         match(',');
+        vname = strdup(get_lexeme());
         match(id);
+        if(match_ok){addv_name(vname);}
     }
     out("id_list");
 }
 static void type_grmr()
 {
     in("type");
+    int typtok = lookahead;
     if(lookahead == integer)
         match(integer);
     else if(lookahead == real)
         match(real);
     else if(lookahead == boolean)
         match(boolean);
+    if(match_ok){setv_type(typtok);}
     out("type");
 }
 static void stat_part_grmr()
@@ -208,6 +221,7 @@ int parser()
     lookahead = get_token();        // get the first token
     prog_grmr();                    // call the first grammar rule               
     check_stream();                 // check if stream is empty
+    p_symtab();
     out("parser");
     return is_parse_ok;             // status indicator
 }
