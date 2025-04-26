@@ -99,9 +99,9 @@ static int get_ref(char * fpname)
 /**********************************************************************/
 static void p_symrow(int ftref)
 {
-    printf("%10s%10s%10s%10d%10d\n",    name[ftref], tok2lex(role[ftref]),
-                                        tok2lex(type[ftref]), size[ftref], 
-                                        addr[ftref]);
+    printf("%10s%10s%10s%10d%10d\n",    get_name(ftref), tok2lex(get_role(ftref)),
+                                        tok2lex(get_type(ftref)), get_size(ftref), 
+                                        get_addr(ftref));
 }
 
 void p_symtab()
@@ -131,9 +131,7 @@ void addp_name(char * fpname)
 /**********************************************************************/
 void addv_name(char * fpname)
 {
-    if(!find_name(fpname)){
-        addrow(fpname, var, undef, undef, undef);
-    }
+    addrow(fpname, var, error, 0, 0);
 }
 
 /**********************************************************************/
@@ -153,7 +151,7 @@ void setv_type(toktyp ftype)
     int ref = get_ref(tok2lex(ftype));
     int ftype_size = get_size(ref);
     for(int i = startp; i < numrows; i++){
-        if(get_type(i) == undef){
+        if(get_type(i) == error){
             set_type(i, ftype);
             set_size(i, ftype_size);
             if (i == startp) 

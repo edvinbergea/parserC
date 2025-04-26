@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdarg.h>
 
 /**********************************************************************/
 /* Other OBJECT's METHODS (IMPORTED)                                  */
@@ -15,7 +16,7 @@
 #include "keytoktab.h"
 #include "lexer.h"
 #include "symtab.h"
-//#include "optab.h"
+#include "optab.h"
 
 /**********************************************************************/
 /* OBJECT ATTRIBUTES FOR THIS OBJECT (C MODULE)                       */
@@ -36,6 +37,24 @@ static void out(char* s)
 {
     if(DEBUG) printf("\n *** Out %s", s);
 }
+static void syntax_error(char* fmt, ...){
+    va_list args;
+    printf("SYNTAX: ");
+    va_start(args, fmt);
+    vfprintf(stdout, fmt, args);
+    va_end(args);
+    puts("");
+    is_parse_ok = 0;
+}
+static void semantic_error(char* fmt, ...){
+    va_list args;
+    printf("SEMANTIC: ");
+    va_start(args, fmt);
+    vfprintf(stdout, fmt, args);
+    va_end(args);
+    puts("");
+    is_parse_ok = 0;
+}
 /**********************************************************************/
 /* The Parser functions                                               */
 /**********************************************************************/
@@ -47,35 +66,48 @@ static void match(int t)
     if (lookahead == t) lookahead = get_token();
     else {
         match_ok = 0;
-        is_parse_ok=0;
-        printf("\n *** Unexpected Token:\t expected: %-7s  found: %s (in match)",
-                tok2lex(t), tok2lex(lookahead));
+        if(t == typ) syntax_error("expected: a type  found: '%s'", tok2lex(lookahead));
+        else if(t == number) syntax_error("expected: opperand  found: '%s'", tok2lex(lookahead));
+        else syntax_error("expected: '%s'  found: '%s'", tok2lex(t), tok2lex(lookahead));
     }
 }
 static void check_stream(){
     if(lookahead != '$'){
-        is_parse_ok = 0;
+        syntax_error("extra symbols after end of parse!");
     }
+}
+static void check_add_name(char* str){
+    if(match_ok){
+        if(!find_name(str))
+            addv_name(str);
+        else semantic_error("variable '%s' already declared!", str);
+    }
+}
+static int left_right_cmp(toktyp a, toktyp b){
+    if(a != b || (a != integer && a != boolean && a != real)){
+        return 0;
+    } 
+    else { return 1;}
 }
 
 /**********************************************************************/
 /* The grammar functions                                              */
 /**********************************************************************/
-static void prog_grmr(void);
-static void prog_header_grmr(void);
-static void var_part_grmr(void);
-static void var_dec_list_grmr(void);
-static void var_dec_grmr(void);
-static void id_list_grmr(void);
-static void type_grmr(void);
-static void stat_part_grmr(void);
-static void stat_list_grmr(void);
-static void stat_grmr(void);
-static void assign_stat_grmr(void);
-static void expr_grmr(void);
-static void term_grmr(void);
-static void factor_grmr(void);
-static void operand_grmr(void);
+static void   prog_grmr(void);
+static void   prog_header_grmr(void);
+static void   var_part_grmr(void);
+static void   var_dec_list_grmr(void);
+static void   var_dec_grmr(void);
+static void   id_list_grmr(void);
+static void   type_grmr(void);
+static void   stat_part_grmr(void);
+static void   stat_list_grmr(void);
+static void   stat_grmr(void);
+static void   assign_stat_grmr(void);
+static toktyp expr_grmr(void);
+static toktyp term_grmr(void);
+static toktyp factor_grmr(void);
+static toktyp operand_grmr(void);
 
 static void prog_grmr()
 {
@@ -119,26 +151,27 @@ static void id_list_grmr()
     in("id_list");
     char *vname = strdup(get_lexeme());
     match(id);
-    if(match_ok){addv_name(vname);}
+    check_add_name(vname);
     while(lookahead == ','){
         match(',');
         vname = strdup(get_lexeme());
         match(id);
-        if(match_ok){addv_name(vname);}
+        check_add_name(vname);
     }
     out("id_list");
 }
 static void type_grmr()
 {
     in("type");
-    int typtok = lookahead;
+    int tok = lookahead;
     if(lookahead == integer)
         match(integer);
     else if(lookahead == real)
         match(real);
     else if(lookahead == boolean)
         match(boolean);
-    if(match_ok){setv_type(typtok);}
+    else match(typ);
+    if(match_ok){setv_type(tok);}
     out("type");
 }
 static void stat_part_grmr()
@@ -166,49 +199,75 @@ static void stat_grmr()
 static void assign_stat_grmr()
 {
     in("assign_stat");
-    match(id); match(assign); expr_grmr();
+    char *vname = strdup(get_lexeme());
+    toktyp left_type; 
+    match(id); 
+    if(match_ok){
+        if(!find_name(vname))
+            semantic_error("variable '%s' not declared!", vname);
+        else left_type = get_ntype(vname);
+    }
+    match(assign);
+    toktyp right_type = expr_grmr();
+    if(!left_right_cmp(left_type, right_type)){semantic_error("'%s' can not be assigned to '%s'!",
+                                tok2lex(left_type), tok2lex(right_type));}
     out("assign_stat");
 }
-static void expr_grmr()
+static toktyp expr_grmr()
 {
     in("expr");
-    term_grmr();
+    toktyp res_type = term_grmr();
     while(lookahead == '+'){
         match('+');
-        term_grmr();
+        res_type = get_otype('+', res_type, term_grmr());
     }
     out("expr");
+    return res_type;
 }
-static void term_grmr()
+static toktyp term_grmr()
 {
     in("term");
-    factor_grmr();
+    toktyp res_type = factor_grmr();
     while(lookahead == '*'){
         match('*');
-        factor_grmr();
+        res_type = get_otype('*', res_type, factor_grmr());
     }
     out("term");
+    return res_type;
 }
-static void factor_grmr()
+static toktyp factor_grmr()
 {
     in("factor");
+    toktyp res_type;
     if(lookahead == '('){
         match('(');
-        expr_grmr();
+        res_type = expr_grmr();
         match(')');
     }
-    else if(lookahead == id || lookahead == number)
-        operand_grmr();
+    else res_type = operand_grmr();
     out("factor");
+    return res_type;
 }
-static void operand_grmr()
+static toktyp operand_grmr()
 {
     in("opperand");
-    if(lookahead == id)
+    char *vname = strdup(get_lexeme());
+    toktyp res_type;
+    if(lookahead == id){
         match(id);
-    if(lookahead == number)
+        if(!find_name(vname)){
+            semantic_error("variable '%s' not declared!", vname);
+            res_type = undef;
+        }
+        else res_type = get_ntype(vname);
+    }
+    else if(lookahead == number){
         match(number);
+        res_type = integer;
+    }
+    else match(number);
     out("opperand");
+    return res_type;
 }
 
 /**********************************************************************/

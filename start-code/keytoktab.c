@@ -142,7 +142,7 @@ char * tok2lex(toktyp ftok)
     if((res = search_tok(keywordtab, ftok)) != NULL || (res = search_tok(tokentab, ftok)) != NULL)
         return res;
     else{
-        return NULL;
+        return tok2lex(error);
     }
 }
 
